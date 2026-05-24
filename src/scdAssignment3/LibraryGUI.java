@@ -1,5 +1,6 @@
 package scdAssignment3;
 
+
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -23,6 +24,38 @@ import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JTextArea;
+
+class NullSelectionException extends Exception {
+
+    public NullSelectionException(String message) {
+
+        super(message);
+    }
+}
+
+class InvalidDateException extends Exception {
+
+    public InvalidDateException(String message) {
+
+        super(message);
+    }
+}
+
+class InvalidRollNumberException extends Exception {
+
+    public InvalidRollNumberException(String message) {
+
+        super(message);
+    }
+}
+
+class EmptyFieldException extends Exception {
+
+    public EmptyFieldException(String message) {
+
+        super(message);
+    }
+}
 
 public class LibraryGUI extends JFrame {
 
@@ -291,137 +324,174 @@ public class LibraryGUI extends JFrame {
 
 		remarksField.setBounds(260, 327, 292, 70);
 		contentPane.add(remarksField);
+		
+		
 		issueButton.addActionListener(new ActionListener() {
 
-			public void actionPerformed(ActionEvent e) {
+		    public void actionPerformed(ActionEvent e) {
 
-				
-				String studentName = nameField.getText().trim();
-				String regNo = regField.getText().trim();
+		        try {
 
-			
-				if (studentName.isEmpty()) {
+		            String studentName =nameField.getText().trim();
 
-					JOptionPane.showMessageDialog(
-							issueButton,
-							"Please enter student name.",
-							"Missing Field",
-							JOptionPane.WARNING_MESSAGE);
+		            String regNo = regField.getText().trim();
 
-					nameField.requestFocus();
-					return;
-				}
+		            // Empty Field Validation
 
-				if (regNo.isEmpty()) {
+		            if(studentName.isEmpty()) {
+		                throw new EmptyFieldException("Student name cannot empty");
+		            }
 
-					JOptionPane.showMessageDialog(
-							issueButton,
-							"Please enter registration number.",
-							"Missing Field",
-							JOptionPane.WARNING_MESSAGE);
+		            if(regNo.isEmpty()) {
+		                throw new EmptyFieldException("Registration number cannot be empty");
+		            }
 
-					regField.requestFocus();
-					return;
-				}
-				
-				if (categoryCombo.getSelectedItem() == null) {
 
-					JOptionPane.showMessageDialog(
-							issueButton,
-							"Please select a category.",
-							"Missing Field",
-							JOptionPane.WARNING_MESSAGE);
+		            
+		            if(!regNo.matches("\\d+")) {
+		               throw new InvalidRollNumberException( "Registration number must contain digits only.");
+		            }
 
-					return;
-				}
 
-				if (bookCombo.getSelectedItem() == null) {
 
-					JOptionPane.showMessageDialog(
-							issueButton,
-							"Please select a book.",
-							"Missing Field",
-							JOptionPane.WARNING_MESSAGE);
+		            int roll = Integer.parseInt(regNo);
 
-					return;
-				}
 
-				if (!newEdition.isSelected() && !oldEdition.isSelected()) {
 
-					JOptionPane.showMessageDialog(
-							issueButton,
-							"Please select book edition.",
-							"Missing Field",
-							JOptionPane.WARNING_MESSAGE);
+		            if(categoryCombo.getSelectedItem() == null) {
 
-					return;
-				}
+		                throw new NullSelectionException("category is required!");
+		            }
 
-				String category = categoryCombo.getSelectedItem().toString();
-				String book = bookCombo.getSelectedItem().toString();
 
-				String edition = "";
+		            if(bookCombo.getSelectedItem() == null) {
 
-				if (newEdition.isSelected()) {
-					edition = "New Edition";
-				}
+		                throw new NullSelectionException( "Book is required!");
+		            }
 
-				else if (oldEdition.isSelected()) {
-					edition = "Old Edition";
-				}
-				
-				String remarks =
-						remarksField.getText();
+		            if(!newEdition.isSelected()&& !oldEdition.isSelected()) {
+		                throw new NullSelectionException("Please select book edition");
+		            }
 
-				if(remarks.equals(
-						"Write your remarks here...")) {
+		            String category =categoryCombo.getSelectedItem().toString();
 
-					remarks = "No Remarks";
-				}
+		            String book = bookCombo.getSelectedItem().toString();
 
-				LocalDate issueDate = LocalDate.now();
-				LocalDate returnDate = issueDate.plusDays(7);
+		            String edition = "";
 
-				DateTimeFormatter formatter =
-						DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		            if(newEdition.isSelected()) {
+		                edition = "New Edition";
+		            }
+		            else {
+		                edition = "Old Edition";
+		            }
 
-				String formattedIssueDate = issueDate.format(formatter);
-				String formattedReturnDate = returnDate.format(formatter);
-				
-				String message =
+		            String remarks =remarksField.getText();
 
-						"Book Issued Successfully!\n\n"
+		            if(remarks.equals("Write your remarks here...")) {
+		                remarks = "No Remarks";
+		            }
 
-						+ "Student Name: "
-						+ studentName
 
-						+ "\nRegistration No: "
-						+ regNo
+		            LocalDate issueDate = LocalDate.now();
 
-						+ "\n\nCategory: "
-						+ category
+		            LocalDate returnDate =issueDate.plusDays(7);
 
-						+ "\nBook: "
-						+ book
+		            if(returnDate.isBefore(issueDate)) {
+		                throw new InvalidDateException( "Return date cannot be less than issue date");
+		            }
 
-						+ "\nEdition: "
-						+ edition
+		            DateTimeFormatter formatter =DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		            String formattedIssueDate =issueDate.format(formatter);
+		            String formattedReturnDate =returnDate.format(formatter);
 
-						+ "\n\nIssue Date: "
-						+ formattedIssueDate
+		            String message =
+		                    "Book Issued Successfully!\n\n"
+		                    + "Student Name: "  + studentName
+		                    + "\nRegistration No: "+regNo
+		                    + "\n\nCategory: " + category
+		                    + "\nBook: "+ book
+		                    + "\nEdition: "+ edition
 
-						+ "\nReturn Date: "
-						+ formattedReturnDate
+		                    + "\n\nIssue Date: "
+		                    + formattedIssueDate
 
-						+ "\n\nRemarks: "
-						+ remarks;
+		                    + "\nReturn Date: "
+		                    + formattedReturnDate
 
-				JOptionPane.showMessageDialog(
-						issueButton,
-						message,
-						"Issue Confirmation",
-						JOptionPane.INFORMATION_MESSAGE);
-			}
+		                    + "\n\nRemarks: "
+		                    + remarks;
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    message,
+		                    "Issue Confirmation",
+		                    JOptionPane.INFORMATION_MESSAGE);
+
+		        }
+
+		        catch(EmptyFieldException ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    ex.getMessage(),
+		                    "Empty Field Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        catch(InvalidRollNumberException ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    ex.getMessage(),
+		                    "Invalid Roll Number",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        catch(NullSelectionException ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    ex.getMessage(),
+		                    "Selection Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        catch(InvalidDateException ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    ex.getMessage(),
+		                    "Date Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        catch(NumberFormatException ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    "Only numeric values are allowed.",
+		                    "Number Format Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        catch(Exception ex) {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    "Unexpected Error: "
+		                    + ex.getMessage(),
+		                    "System Error",
+		                    JOptionPane.ERROR_MESSAGE);
+		        }
+
+		        finally {
+
+		            JOptionPane.showMessageDialog(
+		                    issueButton,
+		                    "Operation Completed");
+		        }
+		    }
 		});
 		
 		resetButton.addActionListener(new ActionListener() {
@@ -456,3 +526,4 @@ public class LibraryGUI extends JFrame {
 		});
 	}
 }
+
